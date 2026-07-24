@@ -8,11 +8,21 @@
 </head>
 <body>
   <header>
+    <div class="topbar">
+      <button id="browse-btn" class="icon-btn">📖 观看词条</button>
+      <button id="music-btn" class="icon-btn">🔇 音乐</button>
+    </div>
     <h1>🍻 喝酒转盘</h1>
     <p class="subtitle">转到谁，谁就按条件喝 · 优先级防重复</p>
   </header>
 
   <main>
+    <!-- 模式开关 -->
+    <div class="mode-switch" id="mode-switch">
+      <button data-mode="wheel" class="active">🎡 转盘</button>
+      <button data-mode="flash">✨ 随机闪现</button>
+    </div>
+
     <div class="controls">
       <select id="category" aria-label="分类"></select>
       <button id="reset" class="ghost">重置这一局</button>
@@ -24,9 +34,19 @@
       <span class="switch" aria-hidden="true"></span>
     </label>
 
-    <div class="wheel-wrap">
-      <div class="pointer">▼</div>
-      <canvas id="wheel" width="360" height="360"></canvas>
+    <!-- 舞台：转盘 -->
+    <div class="stage" id="stage-wheel">
+      <div class="wheel-wrap">
+        <div class="pointer">▼</div>
+        <canvas id="wheel" width="360" height="360"></canvas>
+      </div>
+    </div>
+
+    <!-- 舞台：随机闪现 -->
+    <div class="stage hidden" id="stage-flash">
+      <div class="flash-box">
+        <div id="flash-text" class="flash-text">按下面「开始」</div>
+      </div>
     </div>
 
     <button id="spin" class="primary">转 起 来</button>
@@ -44,10 +64,23 @@
     <p>词条越新（没出现过）越容易被转到，出现过就往后排，尽量不重复。</p>
   </footer>
 
+  <!-- 观看词条 弹窗 -->
+  <div class="modal hidden" id="browse-modal">
+    <div class="modal-panel">
+      <div class="modal-head">
+        <span id="browse-title">全部词条</span>
+        <button id="browse-close" class="icon-btn">✕</button>
+      </div>
+      <div class="modal-body" id="browse-list"></div>
+    </div>
+  </div>
+
   <script src="js/entries-data.js"></script>
   <script src="js/entries.js"></script>
   <script src="js/db.js"></script>
   <script src="js/wheel.js"></script>
+  <script src="js/flash.js"></script>
+  <script src="js/music.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
