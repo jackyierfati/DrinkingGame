@@ -1,0 +1,14 @@
+# 系统 / 编辑器
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# 依赖 / 构建（以后加了打包工具再用）
+node_modules/
+dist/
+build/
+
+# 日志
+*.log
