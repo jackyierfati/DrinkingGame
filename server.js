@@ -15,8 +15,9 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-// 默认用不常见端口 8123（比 8080 难被扫到）；可用 PORT 或命令行参数覆盖
-const PORT = process.env.PORT || process.argv[2] || 8123;
+// 默认用不常见端口 8555（避开 HomeAssistant 占用的 8123，也不好被扫到）
+// 可用 PORT 环境变量或命令行参数覆盖，例如：node server.js 9000
+const PORT = process.env.PORT || process.argv[2] || 8555;
 const ROOT = __dirname;
 
 const MIME = {
