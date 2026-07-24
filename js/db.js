@@ -17,8 +17,8 @@
 const STORAGE_KEY = 'drinkinggame.priorities.v1';
 
 class EntryDB {
-  constructor(actionsPerSubject = 3) {
-    this.entries = window.EntryGen.generateEntries(actionsPerSubject);
+  constructor(includeExpanded = true) {
+    this.entries = window.EntryGen.generateEntries(includeExpanded);
     this.index = new Map(this.entries.map((e) => [e.id, e]));
     this._loadPriorities();
   }

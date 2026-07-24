@@ -12,7 +12,7 @@
   const statsEl = document.getElementById('stats');
   const resetBtn = document.getElementById('reset');
 
-  const db = new EntryDB(3);
+  const db = new EntryDB(true);
   const wheel = new Wheel(canvas, { onResult });
 
   // 分类下拉
