@@ -1,0 +1,9 @@
+{
+  "name": "drinking-game",
+  "version": "1.0.0",
+  "description": "喝酒转盘 · 转到词条满足条件就喝，优先级防重复",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "MIT"
+}
