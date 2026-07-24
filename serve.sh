@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # 一键本地运行：起个静态服务器，浏览器打开就能玩。
-# 用法：  ./serve.sh          （默认 8080 端口）
+# 用法：  ./serve.sh          （默认 8123 端口）
 #         ./serve.sh 3000     （指定端口）
-PORT="${1:-8080}"
+PORT="${1:-8123}"
 URL="http://localhost:${PORT}"
 echo "🍻 喝酒转盘运行中： ${URL}"
 echo "   改完代码刷新浏览器即可看到效果，Ctrl+C 停止。"

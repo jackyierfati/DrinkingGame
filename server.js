@@ -15,7 +15,8 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const PORT = process.env.PORT || process.argv[2] || 8080;
+// 默认用不常见端口 8123（比 8080 难被扫到）；可用 PORT 或命令行参数覆盖
+const PORT = process.env.PORT || process.argv[2] || 8123;
 const ROOT = __dirname;
 
 const MIME = {
