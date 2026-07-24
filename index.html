@@ -18,6 +18,12 @@
       <button id="reset" class="ghost">重置这一局</button>
     </div>
 
+    <label class="switch-row" for="amount-toggle">
+      <span>随机喝多少</span>
+      <input type="checkbox" id="amount-toggle" />
+      <span class="switch" aria-hidden="true"></span>
+    </label>
+
     <div class="wheel-wrap">
       <div class="pointer">▼</div>
       <canvas id="wheel" width="360" height="360"></canvas>
@@ -28,6 +34,7 @@
     <div class="result-card">
       <div id="result-cat" class="cat"></div>
       <div id="result" class="result">点「转起来」开始</div>
+      <div id="result-amount" class="amount"></div>
     </div>
 
     <p id="stats" class="stats"></p>

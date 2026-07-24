@@ -11,9 +11,35 @@
   const catSelect = document.getElementById('category');
   const statsEl = document.getElementById('stats');
   const resetBtn = document.getElementById('reset');
+  const amountToggle = document.getElementById('amount-toggle');
+  const resultAmount = document.getElementById('result-amount');
+
+  // 「随机喝多少」的候选与权重（w 越大越常出现）
+  const AMOUNTS = [
+    { text: '喝一口', w: 3 },
+    { text: '喝两口', w: 2.5 },
+    { text: '喝三口', w: 1.5 },
+    { text: '喝半杯', w: 1 },
+    { text: '随意抿一口', w: 1 },
+    { text: '干了这杯！', w: 0.4 },
+  ];
+  const AMOUNT_KEY = 'drinkinggame.randomAmount.v1';
+
+  function pickAmount() {
+    const total = AMOUNTS.reduce((s, a) => s + a.w, 0);
+    let r = Math.random() * total;
+    for (const a of AMOUNTS) {
+      r -= a.w;
+      if (r <= 0) return a.text;
+    }
+    return AMOUNTS[0].text;
+  }
 
   const db = new EntryDB(true);
   const wheel = new Wheel(canvas, { onResult });
+
+  // 恢复开关状态
+  amountToggle.checked = localStorage.getItem(AMOUNT_KEY) === '1';
 
   // 分类下拉
   const optAll = document.createElement('option');
@@ -45,6 +71,8 @@
     db.markUsed(entry);
     resultEl.textContent = entry.text;
     resultCat.textContent = entry.category;
+    // 开关打开：随机决定喝多少；关闭：只显示条件，喝多少自己定
+    resultAmount.textContent = amountToggle.checked ? '🍺 ' + pickAmount() : '';
     resultEl.classList.remove('pop');
     void resultEl.offsetWidth; // 触发重绘以重放动画
     resultEl.classList.add('pop');
@@ -56,6 +84,11 @@
   spinBtn.addEventListener('click', () => wheel.spin());
   canvas.addEventListener('click', () => wheel.spin());
   catSelect.addEventListener('change', refillWheel);
+  amountToggle.addEventListener('change', () => {
+    localStorage.setItem(AMOUNT_KEY, amountToggle.checked ? '1' : '0');
+    // 关掉时立即清掉已显示的酒量
+    if (!amountToggle.checked) resultAmount.textContent = '';
+  });
   resetBtn.addEventListener('click', () => {
     if (confirm('重置所有词条优先级？（新的一局用）')) {
       db.resetPriorities();
@@ -63,6 +96,7 @@
       updateStats();
       resultEl.textContent = '已重置，开转吧！';
       resultCat.textContent = '';
+      resultAmount.textContent = '';
     }
   });
 
