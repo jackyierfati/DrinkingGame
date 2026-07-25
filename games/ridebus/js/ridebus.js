@@ -194,12 +194,33 @@
 
   function renderP2Hands() {
     const box = $('p2-hands'); box.innerHTML = '';
+    const sums = S.hands.map((h) => h.reduce((s, c) => s + c.rank, 0));
+    const withCards = sums.filter((_, i) => S.hands[i].length > 0);
+    const maxSum = withCards.length ? Math.max(...withCards) : 0;
+    const minSum = withCards.length ? Math.min(...withCards) : 0;
+
     S.names.forEach((nm, i) => {
       const row = document.createElement('div'); row.className = 'hp-row';
       const nameEl = document.createElement('span'); nameEl.className = 'hp-name'; nameEl.textContent = nm;
       row.appendChild(nameEl);
-      if (S.hands[i].length === 0) { const e = document.createElement('span'); e.className = 'hp-empty'; e.textContent = '（无牌）'; row.appendChild(e); }
-      else S.hands[i].forEach((c) => { const mini = cardEl(c, false); mini.classList.add('mini'); row.appendChild(mini); });
+      const cardsWrap = document.createElement('span'); cardsWrap.className = 'hp-cards';
+      if (S.hands[i].length === 0) {
+        const e = document.createElement('span'); e.className = 'hp-empty'; e.textContent = '（无牌）'; cardsWrap.appendChild(e);
+      } else {
+        S.hands[i].forEach((c) => { const mini = cardEl(c, false); mini.classList.add('mini'); cardsWrap.appendChild(mini); });
+      }
+      row.appendChild(cardsWrap);
+
+      // 总计点数（方便看谁最高/最低）
+      const total = document.createElement('span');
+      total.className = 'hp-total';
+      let tag = '';
+      if (S.hands[i].length > 0 && withCards.length > 1) {
+        if (sums[i] === maxSum) tag = ' <span class="tag-hi">最高</span>';
+        else if (sums[i] === minSum) tag = ' <span class="tag-lo">最低</span>';
+      }
+      total.innerHTML = `${sums[i]} 点${tag}`;
+      row.appendChild(total);
       box.appendChild(row);
     });
   }

@@ -90,9 +90,13 @@ body {
 .no-match { color: var(--muted); font-size: 14px; text-align: center; padding: 6px; }
 
 .hands-panel { border-top: 1px solid #2a2540; margin-top: 12px; padding-top: 10px; }
-.hp-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
-.hp-name { font-size: 14px; color: var(--muted); width: 64px; flex: 0 0 auto; }
+.hp-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.hp-name { font-size: 14px; color: var(--muted); width: 56px; flex: 0 0 auto; }
+.hp-cards { display: flex; gap: 4px; flex: 1; flex-wrap: wrap; align-items: center; }
 .hp-empty { color: #6b6488; font-size: 13px; }
+.hp-total { font-size: 14px; font-weight: 700; flex: 0 0 auto; white-space: nowrap; }
+.tag-hi { font-size: 11px; color: #ffb3b3; border: 1px solid #ff6b6b; border-radius: 6px; padding: 0 4px; }
+.tag-lo { font-size: 11px; color: #b6f0bd; border: 1px solid #3cb44b; border-radius: 6px; padding: 0 4px; }
 
 /* 开Bus */
 .bus-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 14px 0; }
