@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>🚌 开Bus</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="topnav">
+    <a href="../../index.html" class="nav-btn">‹ 大厅</a>
+    <span class="nav-title">🚌 开Bus</span>
+    <button id="restart" class="nav-btn">重开</button>
+  </div>
+
+  <!-- 设置 -->
+  <section id="setup" class="screen">
+    <h2>谁来开车？</h2>
+    <div class="count-row">
+      <button id="count-minus" class="count-btn">−</button>
+      <span id="count-num">4</span>
+      <button id="count-plus" class="count-btn">＋</button>
+      <span class="count-label">人</span>
+    </div>
+    <div id="name-inputs" class="name-inputs"></div>
+    <p class="hint">2–8 人。A 最小，K 最大。</p>
+    <button id="start-game" class="primary">开始游戏</button>
+  </section>
+
+  <!-- 第一环节：猜牌 -->
+  <section id="phase1" class="screen hidden">
+    <div class="phase-title">第一环节 · 猜牌建筹码</div>
+    <div class="sub" id="p1-who">—</div>
+    <div class="hand-cards" id="p1-cards"></div>
+    <div class="question" id="p1-question">—</div>
+    <div class="choice-row" id="p1-choices"></div>
+    <div class="result" id="p1-result"></div>
+    <button id="p1-next" class="primary hidden">继续</button>
+  </section>
+
+  <!-- 第二环节：牌阵 -->
+  <section id="phase2" class="screen hidden">
+    <div class="phase-title">第二环节 · 牌阵</div>
+    <div class="pyramid" id="p2-pyramid"></div>
+    <div class="result" id="p2-info">点「翻开下一张」开始</div>
+    <div class="match-area" id="p2-matches"></div>
+    <button id="p2-flip" class="primary">翻开下一张</button>
+    <div class="hands-panel" id="p2-hands"></div>
+  </section>
+
+  <!-- 第三环节：开Bus -->
+  <section id="phase3" class="screen hidden">
+    <div class="phase-title">第三环节 · 开Bus 🚌</div>
+    <div class="sub" id="p3-who">—</div>
+    <div class="bus-row" id="p3-row"></div>
+    <div class="question" id="p3-question">—</div>
+    <div class="choice-row" id="p3-choices"></div>
+    <div class="result" id="p3-result"></div>
+    <button id="p3-next" class="primary hidden">继续</button>
+  </section>
+
+  <!-- 结束 -->
+  <section id="over" class="screen hidden">
+    <div class="phase-title">🎉 本局结束</div>
+    <div class="result" id="over-info"></div>
+    <button id="over-again" class="primary">再来一局</button>
+  </section>
+
+  <!-- 指定/选择 弹窗 -->
+  <div id="picker" class="picker hidden">
+    <div class="picker-panel">
+      <div class="picker-title" id="picker-title">选择</div>
+      <div id="picker-list"></div>
+      <button id="picker-cancel" class="ghost">取消</button>
+    </div>
+  </div>
+
+  <!-- 飘字 -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="js/ridebus.js"></script>
+</body>
+</html>
