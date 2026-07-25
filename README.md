@@ -1,7 +1,17 @@
-# 🍻 喝酒转盘 DrinkingGame
+# 🍻 喝酒游戏合集 DrinkingGame
 
-一个「转盘选词条、满足条件就喝酒」的小游戏。纯前端（HTML/JS，无需构建），
-手机浏览器直接打开即用，以后可以用 Capacitor / 套壳打包成 App。
+一个喝酒小游戏合集。主页是游戏大厅，点卡片进入各游戏；每个游戏在
+`games/<名字>/` 下独立成页，**改哪个游戏只动那一页**，互不影响。纯前端
+（HTML/JS，无需构建），手机/电视浏览器直接打开即用。
+
+## 游戏列表
+
+- **🎡 喝酒转盘**（`games/wheel/`）：转到词条，符合条件的人喝。两种模式、
+  优先级防重复、可自定义词条。详见下文。
+- **🃏 小姐牌**（`games/misscard/`）：扑克牌喝酒游戏。单机主持发牌、全场围观，
+  App 自动判定确定性规则（左右喝/自己喝/公杯/K计数）并追踪状态（小姐/神经病/
+  手牌/公杯），口头类玩法（三园/PK/跳7/照相机/摸鼻子）弹规则提示、输赢自认。
+  牌值 A=1…K=13（大小王暂未做）；4 张 K 出完即结束。
 
 ## 功能
 
@@ -86,14 +96,19 @@
 ## 目录结构
 
 ```
-index.html          页面
-styles.css          样式（暗色、移动端优先）
-js/entries-data.js  真实词条库（3 个视频逐帧抄录，216 条）
-js/entries.js       词条构建器（真实词条 + 同风格扩写 + 去重）
-js/db.js            词库 + 优先级持久化 + 加权抽取
-js/wheel.js         Canvas 转盘（绘制 + 旋转动画）
-js/app.js           组装：界面 ↔ 数据库 ↔ 转盘
-tools/extract_frames.sh  从转盘视频抽帧，供逐帧抄录词条
+index.html                    主页大厅（游戏卡片列表）
+server.js / serve.sh          服务端 / 一键启动
+games/wheel/                  游戏①：喝酒转盘
+  index.html · styles.css
+  js/entries-data.js          真实词条库（3 个视频逐帧抄录，216 条）
+  js/entries.js               词条构建器（真实词条 + 同风格扩写 + 去重）
+  js/db.js                    词库 + 优先级 + 加权抽取 + 自定义覆盖层
+  js/wheel.js · js/flash.js   转盘 / 随机闪现两种动画
+  js/music.js · js/app.js     音乐 / 组装
+games/misscard/               游戏②：小姐牌
+  index.html · styles.css
+  js/misscard.js              发牌 + 规则解析 + 状态追踪
+tools/extract_frames.sh       从转盘视频抽帧，供逐帧抄录词条
 ```
 
 ## 运行

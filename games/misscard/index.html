@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>🃏 小姐牌</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="topnav">
+    <a href="../../index.html" class="nav-btn">‹ 大厅</a>
+    <span class="nav-title">🃏 小姐牌</span>
+    <button id="restart" class="nav-btn">重开</button>
+  </div>
+
+  <!-- 设置：人数 + 名字 -->
+  <section id="setup" class="screen">
+    <h2>谁来玩？</h2>
+    <div class="count-row">
+      <button id="count-minus" class="count-btn">−</button>
+      <span id="count-num">4</span>
+      <button id="count-plus" class="count-btn">＋</button>
+      <span class="count-label">人</span>
+    </div>
+    <div id="name-inputs" class="name-inputs"></div>
+    <p class="hint">按入座顺序填名字（围成一圈：上一个＝左边，下一个＝右边）</p>
+    <button id="start-game" class="primary">开始游戏</button>
+  </section>
+
+  <!-- 游戏 -->
+  <section id="game" class="screen hidden">
+    <div class="turn-hint" id="turn-hint">轮到 <b>—</b> 摸牌</div>
+
+    <div class="card-stage">
+      <div class="playing-card" id="card">
+        <span class="card-rank" id="card-rank">🃏</span>
+        <span class="card-name" id="card-name">点「摸牌」开始</span>
+      </div>
+    </div>
+
+    <div class="prompt" id="prompt"></div>
+
+    <div class="action-row">
+      <button id="draw" class="primary">摸 牌</button>
+      <button id="camera-timer" class="ghost">📸 10秒</button>
+    </div>
+
+    <div class="panel">
+      <div class="panel-row">
+        <span class="panel-k">🏷 小姐</span><span id="p-miss" class="panel-v">无</span>
+      </div>
+      <div class="panel-row">
+        <span class="panel-k">🤪 神经病</span>
+        <span id="p-neuro" class="panel-v">无</span>
+        <button id="clear-neuro" class="mini-btn hidden">解除</button>
+      </div>
+      <div class="panel-row">
+        <span class="panel-k">🍶 公杯</span><span id="p-cup" class="panel-v">空 · 出K 0/4</span>
+      </div>
+      <div class="panel-hands" id="p-hands"></div>
+      <div class="panel-note">谁喝酒都可叫小姐配合（9 / K 除外）</div>
+    </div>
+  </section>
+
+  <!-- 照相机倒计时遮罩 -->
+  <div id="countdown" class="countdown hidden"><span id="countdown-num">10</span></div>
+
+  <script src="js/misscard.js"></script>
+</body>
+</html>

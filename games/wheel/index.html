@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>🍻 喝酒转盘 DrinkingGame</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <button id="browse-btn" class="icon-btn">📖 词条</button>
+      <button id="music-btn" class="icon-btn">🔇 音乐</button>
+    </div>
+    <h1>🍻 喝酒转盘</h1>
+    <p class="subtitle">转到谁，谁就按条件喝 · 优先级防重复</p>
+  </header>
+
+  <main>
+    <!-- 模式开关 -->
+    <div class="mode-switch" id="mode-switch">
+      <button data-mode="wheel" class="active">🎡 转盘</button>
+      <button data-mode="flash">✨ 随机闪现</button>
+    </div>
+
+    <div class="controls">
+      <select id="category" aria-label="分类"></select>
+      <button id="reset" class="ghost">重置这一局</button>
+    </div>
+
+    <label class="switch-row" for="amount-toggle">
+      <span>随机喝多少</span>
+      <input type="checkbox" id="amount-toggle" />
+      <span class="switch" aria-hidden="true"></span>
+    </label>
+
+    <!-- 舞台：转盘 -->
+    <div class="stage" id="stage-wheel">
+      <div class="wheel-wrap">
+        <div class="pointer">▼</div>
+        <canvas id="wheel" width="360" height="360"></canvas>
+      </div>
+    </div>
+
+    <!-- 舞台：随机闪现 -->
+    <div class="stage hidden" id="stage-flash">
+      <div class="flash-box">
+        <div id="flash-text" class="flash-text">按下面「开始」</div>
+      </div>
+    </div>
+
+    <button id="spin" class="primary">转 起 来</button>
+
+    <div class="result-card">
+      <div id="result-cat" class="cat"></div>
+      <div id="result" class="result">点「转起来」开始</div>
+      <div id="result-amount" class="amount"></div>
+    </div>
+
+    <p id="stats" class="stats"></p>
+  </main>
+
+  <footer>
+    <p>词条越新（没出现过）越容易被转到，出现过就往后排，尽量不重复。</p>
+  </footer>
+
+  <!-- 词条管理 弹窗 -->
+  <div class="modal hidden" id="browse-modal">
+    <div class="modal-panel">
+      <div class="modal-head">
+        <span id="browse-title">词条管理</span>
+        <button id="browse-close" class="icon-btn">✕</button>
+      </div>
+      <div class="manage-toolbar">
+        <input id="manage-search" type="text" placeholder="🔍 搜索词条…" />
+        <button id="manage-add" class="primary small">➕ 新增</button>
+      </div>
+      <div class="modal-body" id="browse-list"></div>
+    </div>
+
+    <!-- 新增/编辑 表单 -->
+    <div class="edit-sheet hidden" id="edit-sheet">
+      <div class="edit-panel">
+        <div class="edit-title" id="edit-title">新增词条</div>
+        <textarea id="edit-text" rows="2" placeholder="词条内容，例如：戴眼镜的喝"></textarea>
+        <select id="edit-cat" aria-label="分类"></select>
+        <div class="edit-actions">
+          <button id="edit-del" class="ghost danger">删除</button>
+          <span style="flex:1"></span>
+          <button id="edit-cancel" class="ghost">取消</button>
+          <button id="edit-save" class="primary small">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/entries-data.js"></script>
+  <script src="js/entries.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/wheel.js"></script>
+  <script src="js/flash.js"></script>
+  <script src="js/music.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
