@@ -49,8 +49,18 @@
       <button id="camera-timer" class="ghost">📸 10秒</button>
       <button id="clear-neuro" class="ghost hidden">解除神经病</button>
     </div>
-    <div class="panel-note">谁喝酒都可叫小姐配合（9 / K 除外）</div>
+    <button id="reshuffle" class="primary hidden">🔀 洗牌重来</button>
+    <div class="tip">点座位上的玩家可使用手牌（挡酒 / 厕所 等）</div>
   </section>
+
+  <!-- 手牌使用面板 -->
+  <div id="hand-sheet" class="hand-sheet hidden">
+    <div class="hand-sheet-panel">
+      <div class="hand-sheet-title" id="hand-sheet-title">手牌</div>
+      <div id="hand-sheet-list"></div>
+      <button id="hand-sheet-close" class="ghost">关闭</button>
+    </div>
+  </div>
 
   <!-- 特殊事件飘字（吐槽/下岗/老鸨） -->
   <div id="toast" class="toast hidden"></div>

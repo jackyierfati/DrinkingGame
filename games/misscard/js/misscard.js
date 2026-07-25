@@ -22,6 +22,11 @@
   const drawBtn = $('draw');
   const cameraTimerBtn = $('camera-timer');
   const clearNeuroBtn = $('clear-neuro');
+  const reshuffleBtn = $('reshuffle');
+  const handSheet = $('hand-sheet');
+  const handSheetTitle = $('hand-sheet-title');
+  const handSheetList = $('hand-sheet-list');
+  const handSheetClose = $('hand-sheet-close');
   const cupMini = $('cup-mini');
   const toastEl = $('toast');
   const countdownEl = $('countdown');
@@ -142,7 +147,27 @@
   function updateDrawBtn() {
     drawBtn.textContent = state.over ? '游戏结束' : `摸 牌（剩 ${state.deck.length}）`;
     drawBtn.disabled = state.over;
+    reshuffleBtn.classList.toggle('hidden', !state.over);
   }
+
+  // 洗牌重来：同一批玩家，新的一副牌，清空本局状态
+  reshuffleBtn.addEventListener('click', () => {
+    if (!state) return;
+    state.deck = shuffle(buildDeck());
+    state.kCount = 0;
+    state.miss = null;
+    state.neuro = null;
+    state.hands = state.names.map(() => []);
+    state.over = false;
+    state.drawer = 0;
+    cardRank.textContent = '🃏';
+    cardTitle.textContent = '新的一局，开摸！';
+    promptEl.innerHTML = '';
+    renderTable();
+    updateTurnHint();
+    updateDrawBtn();
+    showToast('🔀 洗好牌了，新的一局！', 'good');
+  });
 
   drawBtn.addEventListener('click', () => {
     if (!state || state.over) return;
@@ -169,12 +194,9 @@
   const rightOf = (idx) => name((idx + 1) % state.n);            // 右＝下一家
   const holderOf = (label) => state.hands.findIndex((h) => h.includes(label));
 
-  function missLine(canCall) {
-    if (!state.miss) return null;
-    if (!canCall) return '🚫 此时<b>不能</b>叫小姐';
-    const x2 = state.miss.doubled ? '（老鸨喝量 ×2）' : '';
-    return `💋 可叫小姐：小姐何在 → 大爷吃好喝好 → 谢谢${x2}　<span class="dim">大爷不说谢谢则免喝</span>`;
-  }
+  // 9 和 K 是「不可叫小姐」的固定属性牌，始终提示（不泄露是否有小姐）。
+  // 其它喝酒牌不再弹「可叫小姐」——那样等于提醒在场有小姐，违背规则。
+  const NO_MISS_LINE = '🚫 此牌不可叫小姐';
 
   function resolve(v, drawer) {
     const who = name(drawer);
@@ -252,7 +274,7 @@
       }
 
       case 9:
-        return { title: '9 · 自己喝', detail: [`⚡ <b>${who}</b> 自己喝一口！`, missLine(false)].filter(Boolean) };
+        return { title: '9 · 自己喝', detail: [`⚡ <b>${who}</b> 自己喝一口！`, NO_MISS_LINE] };
 
       case 10: {
         const detail = [`🤪 <b>${who}</b> 大声宣布「我是神经病」，谁跟 TA 互动谁喝，互动一次后解除。`,
@@ -264,10 +286,10 @@
       }
 
       case 11:
-        return { title: 'J · 左边喝', detail: [`⚡ <b>${who}</b> 左边的 <b>${leftOf(drawer)}</b> 喝！`, missLine(true)].filter(Boolean) };
+        return { title: 'J · 左边喝', detail: [`⚡ <b>${who}</b> 左边的 <b>${leftOf(drawer)}</b> 喝！`] };
 
       case 12:
-        return { title: 'Q · 右边喝', detail: [`⚡ <b>${who}</b> 右边的 <b>${rightOf(drawer)}</b> 喝！`, missLine(true)].filter(Boolean) };
+        return { title: 'Q · 右边喝', detail: [`⚡ <b>${who}</b> 右边的 <b>${rightOf(drawer)}</b> 喝！`] };
 
       case 13: {
         state.kCount++;
@@ -279,7 +301,7 @@
         endGame(`${who} 喝掉整个公杯`);
         return { title: 'K · 终局！',
           toast: { text: `🍻 ${who} 喝掉整杯，游戏结束！`, cls: 'gold' },
-          detail: [`🍶 第 4 张 K！<b>${who}</b> 喝掉整个公杯，<b>游戏结束</b>！`, missLine(false)].filter(Boolean) };
+          detail: [`🍶 第 4 张 K！<b>${who}</b> 喝掉整个公杯，<b>游戏结束</b>！`, NO_MISS_LINE] };
       }
 
       default:
@@ -329,6 +351,7 @@
         ${state.miss && state.miss.idx === i && state.miss.doubled ? '<div class="seat-title">万年老鸨</div>' : ''}
         <div class="seat-hands">${hands}</div>
       `;
+      seat.addEventListener('click', () => openHandSheet(i));
       table.appendChild(seat);
     }
 
@@ -342,6 +365,51 @@
 
   clearNeuroBtn.addEventListener('click', () => {
     if (state) { state.neuro = null; renderTable(); }
+  });
+
+  // —— 点座位使用手牌（挡酒 / 厕所 等）——
+  const HAND_USE_MSG = {
+    '挡酒': '%name% 打出【挡酒牌】，指定他人代喝！',
+    '厕所': '%name% 用掉【厕所牌】，去上厕所～',
+    '照相机': '%name% 用掉了【照相机】',
+    '摸鼻子': '%name% 用掉了【摸鼻子】',
+  };
+  let sheetIdx = null;
+
+  function openHandSheet(idx) {
+    if (!state) return;
+    sheetIdx = idx;
+    handSheetTitle.textContent = `${state.names[idx]} 的手牌`;
+    handSheetList.innerHTML = '';
+    const hand = state.hands[idx];
+    if (hand.length === 0) {
+      handSheetList.innerHTML = '<div class="sheet-empty">暂无手牌</div>';
+    } else {
+      hand.forEach((label, k) => {
+        const row = document.createElement('button');
+        row.className = 'sheet-item';
+        row.innerHTML = `<span>${HAND_EMOJI[label] || ''} ${label}</span><span class="use">用掉 ›</span>`;
+        row.addEventListener('click', () => useCard(idx, k));
+        handSheetList.appendChild(row);
+      });
+    }
+    handSheet.classList.remove('hidden');
+  }
+
+  function useCard(idx, handPos) {
+    const label = state.hands[idx][handPos];
+    if (!label) return;
+    state.hands[idx].splice(handPos, 1);
+    renderTable();
+    showToast((HAND_USE_MSG[label] || '%name% 用掉了一张牌').replaceAll('%name%', state.names[idx]),
+      label === '挡酒' ? 'pink' : 'good');
+    if (state.hands[idx].length === 0) handSheet.classList.add('hidden');
+    else openHandSheet(idx); // 刷新列表
+  }
+
+  handSheetClose.addEventListener('click', () => handSheet.classList.add('hidden'));
+  handSheet.addEventListener('click', (e) => {
+    if (e.target === handSheet) handSheet.classList.add('hidden');
   });
 
   // —— 飘字 toast ——
@@ -369,7 +437,13 @@
     cdTimer = setInterval(() => {
       nleft--;
       countdownNum.textContent = nleft > 0 ? nleft : '📸';
-      if (nleft <= 0) { clearInterval(cdTimer); cdTimer = null; setTimeout(() => countdownEl.classList.add('hidden'), 700); }
+      if (nleft <= 0) {
+        clearInterval(cdTimer); cdTimer = null;
+        // 10 秒结束＝照相机已使用，消耗掉持有者的照相机牌
+        const h = holderOf('照相机');
+        if (h >= 0) { removeHand(h, '照相机'); renderTable(); }
+        setTimeout(() => countdownEl.classList.add('hidden'), 700);
+      }
     }, 1000);
   });
   countdownEl.addEventListener('click', () => {

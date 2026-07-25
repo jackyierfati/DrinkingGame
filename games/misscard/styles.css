@@ -133,7 +133,31 @@ body {
 .action-row .primary { flex: 1; }
 .action-row .ghost { flex: 0 0 auto; white-space: nowrap; padding: 16px 14px; }
 
-.panel-note { color: var(--muted); font-size: 12px; text-align: center; }
+#reshuffle { margin-bottom: 10px; }
+.tip { color: var(--muted); font-size: 12px; text-align: center; }
+
+/* 手牌使用面板 */
+.hand-sheet {
+  position: fixed; inset: 0; z-index: 85;
+  background: rgba(8, 6, 16, 0.7);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.hand-sheet-panel {
+  width: 100%; max-width: 460px;
+  background: var(--card); border: 1px solid #322c4d;
+  border-radius: 18px 18px 0 0;
+  padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 10px;
+}
+.hand-sheet-title { font-weight: 700; font-size: 16px; text-align: center; }
+.sheet-item {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg); color: var(--text);
+  border: 1px solid #322c4d; border-radius: 12px;
+  padding: 14px 16px; font-size: 16px; font-family: inherit; cursor: pointer;
+}
+.sheet-item .use { color: var(--accent); font-size: 14px; }
+.sheet-empty { color: var(--muted); text-align: center; padding: 16px; }
 
 /* 特殊事件飘字 */
 .toast {
