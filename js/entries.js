@@ -101,7 +101,7 @@ function generateEntries(includeExpanded = true) {
 
 // 浏览器全局
 if (typeof window !== 'undefined') {
-  window.EntryGen = { generateEntries };
+  window.EntryGen = { generateEntries, hashId };
 }
 // Node 测试
 if (typeof module !== 'undefined' && module.exports) {

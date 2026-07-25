@@ -15,12 +15,140 @@
  */
 
 const STORAGE_KEY = 'drinkinggame.priorities.v1';
+const CUSTOM_KEY = 'drinkinggame.custom.v1';
+
+/*
+ * 自定义词条覆盖层（custom overlay）
+ * ------------------------------------------------------------------
+ * 基础词库来自代码（entries-data.js + 扩写），是只读的。
+ * 用户在手机上的增/删/改都存成一层「覆盖」：
+ *   { added:[{id,text,category}], edited:{id:{text,category}}, deleted:[id] }
+ * 优先存服务端（/api/custom，全场共享），没有服务端时退回 localStorage。
+ * 最终词库 = 基础词库 去掉deleted、套用edited、再拼上added。
+ */
+function emptyCustom() {
+  return { added: [], edited: {}, deleted: [] };
+}
+function normalizeCustom(c) {
+  return {
+    added: Array.isArray(c && c.added) ? c.added : [],
+    edited: (c && typeof c.edited === 'object' && c.edited) || {},
+    deleted: Array.isArray(c && c.deleted) ? c.deleted : [],
+  };
+}
 
 class EntryDB {
   constructor(includeExpanded = true) {
-    this.entries = window.EntryGen.generateEntries(includeExpanded);
+    this.base = window.EntryGen.generateEntries(includeExpanded);
+    this.custom = emptyCustom();
+    this.serverOk = false;
+    this.entries = [];
+    this.index = new Map();
+    this._rebuild();
+  }
+
+  /** 异步加载自定义覆盖层：优先服务端，失败退回 localStorage */
+  async loadCustom() {
+    try {
+      const r = await fetch('/api/custom', { cache: 'no-store' });
+      if (!r.ok) throw new Error('no api');
+      this.custom = normalizeCustom(await r.json());
+      this.serverOk = true;
+    } catch (_) {
+      this.serverOk = false;
+      try {
+        const raw = localStorage.getItem(CUSTOM_KEY);
+        if (raw) this.custom = normalizeCustom(JSON.parse(raw));
+      } catch (e) { /* ignore */ }
+    }
+    this._rebuild();
+    return this.serverOk;
+  }
+
+  /** 持久化覆盖层：服务端可用就写服务端，否则写 localStorage */
+  async saveCustom() {
+    if (this.serverOk) {
+      try {
+        await fetch('/api/custom', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.custom),
+        });
+        return;
+      } catch (_) { /* 落到本地兜底 */ }
+    }
+    try {
+      localStorage.setItem(CUSTOM_KEY, JSON.stringify(this.custom));
+    } catch (e) {
+      console.warn('保存自定义词条失败', e);
+    }
+  }
+
+  /** 由 base + custom 重建 this.entries，并套用已保存的优先级 */
+  _rebuild() {
+    const deleted = new Set(this.custom.deleted);
+    const edited = this.custom.edited;
+    const list = [];
+    for (const e of this.base) {
+      if (deleted.has(e.id)) continue;
+      const ov = edited[e.id];
+      list.push(ov ? { ...e, text: ov.text, category: ov.category } : { ...e });
+    }
+    for (const a of this.custom.added) {
+      list.push({ id: a.id, text: a.text, category: a.category, priority: 0, base: 1.0 });
+    }
+    // 按 id 去重（先到先得）
+    const seen = new Set();
+    this.entries = list.filter((e) => (seen.has(e.id) ? false : seen.add(e.id)));
     this.index = new Map(this.entries.map((e) => [e.id, e]));
     this._loadPriorities();
+  }
+
+  // —— 增删改 ——
+
+  /** 新增词条，返回新 id（若文本重复则返回已存在的 id，不重复添加） */
+  addEntry(text, category) {
+    text = (text || '').trim();
+    if (!text) return null;
+    const id = window.EntryGen.hashId(text);
+    if (this.index.has(id)) return id; // 已存在
+    this.custom.added.push({ id, text, category: category || '其他' });
+    this._rebuild();
+    this.saveCustom();
+    return id;
+  }
+
+  /** 修改词条（自动区分是自建的还是基础词条） */
+  editEntry(id, text, category) {
+    text = (text || '').trim();
+    if (!text) return;
+    const a = this.custom.added.find((x) => x.id === id);
+    if (a) {
+      a.text = text;
+      a.category = category || a.category;
+    } else {
+      this.custom.edited[id] = { text, category: category || '其他' };
+    }
+    this._rebuild();
+    this.saveCustom();
+  }
+
+  /** 删除词条（自建的直接移除；基础词条加入 deleted 隐藏） */
+  deleteEntry(id) {
+    const ai = this.custom.added.findIndex((x) => x.id === id);
+    if (ai >= 0) {
+      this.custom.added.splice(ai, 1);
+    } else {
+      if (!this.custom.deleted.includes(id)) this.custom.deleted.push(id);
+      delete this.custom.edited[id];
+    }
+    this._rebuild();
+    this.saveCustom();
+  }
+
+  /** 某条是否为用户自建 */
+  isCustom(id) {
+    return this.custom.added.some((x) => x.id === id);
   }
 
   /** 从 localStorage 恢复优先级，合并到当前词库 */

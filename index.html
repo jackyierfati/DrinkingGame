@@ -9,7 +9,7 @@
 <body>
   <header>
     <div class="topbar">
-      <button id="browse-btn" class="icon-btn">📖 观看词条</button>
+      <button id="browse-btn" class="icon-btn">📖 词条</button>
       <button id="music-btn" class="icon-btn">🔇 音乐</button>
     </div>
     <h1>🍻 喝酒转盘</h1>
@@ -64,14 +64,33 @@
     <p>词条越新（没出现过）越容易被转到，出现过就往后排，尽量不重复。</p>
   </footer>
 
-  <!-- 观看词条 弹窗 -->
+  <!-- 词条管理 弹窗 -->
   <div class="modal hidden" id="browse-modal">
     <div class="modal-panel">
       <div class="modal-head">
-        <span id="browse-title">全部词条</span>
+        <span id="browse-title">词条管理</span>
         <button id="browse-close" class="icon-btn">✕</button>
       </div>
+      <div class="manage-toolbar">
+        <input id="manage-search" type="text" placeholder="🔍 搜索词条…" />
+        <button id="manage-add" class="primary small">➕ 新增</button>
+      </div>
       <div class="modal-body" id="browse-list"></div>
+    </div>
+
+    <!-- 新增/编辑 表单 -->
+    <div class="edit-sheet hidden" id="edit-sheet">
+      <div class="edit-panel">
+        <div class="edit-title" id="edit-title">新增词条</div>
+        <textarea id="edit-text" rows="2" placeholder="词条内容，例如：戴眼镜的喝"></textarea>
+        <select id="edit-cat" aria-label="分类"></select>
+        <div class="edit-actions">
+          <button id="edit-del" class="ghost danger">删除</button>
+          <span style="flex:1"></span>
+          <button id="edit-cancel" class="ghost">取消</button>
+          <button id="edit-save" class="primary small">保存</button>
+        </div>
+      </div>
     </div>
   </div>
 

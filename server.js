@@ -34,9 +34,48 @@ const MIME = {
   '.wav': 'audio/wav',
 };
 
+const CUSTOM_FILE = path.join(ROOT, 'data', 'custom.json');
+const EMPTY_CUSTOM = '{"added":[],"edited":{},"deleted":[]}';
+
 const server = http.createServer((req, res) => {
   // 只取路径部分，去掉查询串
   let urlPath = decodeURIComponent(req.url.split('?')[0]);
+
+  // —— 自定义词条接口：全场共享，存 data/custom.json ——
+  if (urlPath === '/api/custom') {
+    if (req.method === 'GET') {
+      fs.readFile(CUSTOM_FILE, (err, data) => {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(err ? EMPTY_CUSTOM : data);
+      });
+      return;
+    }
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', (c) => {
+        body += c;
+        if (body.length > 2_000_000) req.destroy(); // 防超大 body
+      });
+      req.on('end', () => {
+        try {
+          JSON.parse(body); // 校验是合法 JSON
+          fs.mkdirSync(path.join(ROOT, 'data'), { recursive: true });
+          fs.writeFile(CUSTOM_FILE, body, (err) => {
+            res.writeHead(err ? 500 : 200, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(err ? '{"ok":false}' : '{"ok":true}');
+          });
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end('{"ok":false,"error":"invalid json"}');
+        }
+      });
+      return;
+    }
+    res.writeHead(405);
+    res.end('Method Not Allowed');
+    return;
+  }
+
   if (urlPath === '/') urlPath = '/index.html';
 
   // 防路径穿越：解析后必须仍在 ROOT 内
