@@ -284,13 +284,20 @@
   // 每次猜都重抽一张放到当前位置：猜对→替换并前进；猜错/相等→回第 1 张。
   function startRider() {
     const p3 = S.p3;
+    p3.deck = buildDeck();      // 每位输家一副新牌，牌用完也能下车
     p3.slots = new Array(7).fill(null); // null = 暗牌
     p3.pos = 0;
+    p3.owed = 0;                // 累计要喝多少口（不立刻喝）
     const loser = p3.losers[p3.li];
     $('p3-who').innerHTML = `🚌 <b>${S.names[loser]}</b> 开 Bus（剩牌最大 ${rankLabel(p3.maxRank)}）`;
     $('p3-result').textContent = '';
     $('p3-next').classList.add('hidden');
-    renderBus(); renderP3Question();
+    renderBus(); renderP3Question(); updateP3Status();
+  }
+
+  function updateP3Status() {
+    const p3 = S.p3;
+    $('p3-status').innerHTML = `🂠 剩余 <b>${p3.deck.length}</b> 张　·　🍺 已记 <b>${p3.owed}</b> 口`;
   }
 
   function renderBus() {
@@ -317,44 +324,64 @@
 
   function guessP3(choice) {
     const p3 = S.p3;
+    if (p3.deck.length < 1) { getOff('deckout'); return; }
     const ref = p3.slots[p3.pos] ? p3.slots[p3.pos].rank : 7;
-    if (p3.deck.length < 1) p3.deck = buildDeck();
     const card = p3.deck.pop();
     p3.slots[p3.pos] = card; // 抽到的牌放到当前位置（明牌）
     renderBus();
-    const loser = p3.losers[p3.li];
     const res = $('p3-result');
     $('p3-choices').innerHTML = '';
 
+    let backToStart = false;
     if (card.rank === ref) {
+      p3.owed += 2; // 不大不小，记双倍
       res.className = 'result gold';
-      res.innerHTML = `🎯 不大不小（都是 ${rankLabel(ref)}）！<b>${S.names[loser]}</b> 喝双倍，回第 1 张`;
-      toast('🎯 不大不小，喝双倍！', 'gold');
-      p3.pos = 0;
-      setTimeout(() => { renderBus(); renderP3Question(); res.textContent = ''; }, 1000);
-      return;
-    }
-    const big = card.rank > ref;
-    const right = choice === (big ? 'big' : 'small');
-    if (right) {
-      p3.pos++;
-      if (p3.pos >= 7) {
-        res.className = 'result good';
-        res.innerHTML = `🎉 <b>${S.names[loser]}</b> 七张全过，成功下车！`;
-        $('p3-next').classList.remove('hidden');
-        $('p3-next').textContent = (p3.li + 1 < p3.losers.length) ? '下一位开Bus →' : '结束本局';
-      } else {
+      res.innerHTML = `🎯 不大不小（都是 ${rankLabel(ref)}）！记 <b>+2</b> 口，回第 1 张`;
+      toast('🎯 不大不小，+2 口！', 'gold');
+      backToStart = true;
+    } else {
+      const big = card.rank > ref;
+      const right = choice === (big ? 'big' : 'small');
+      if (right) {
+        p3.pos++;
+        if (p3.pos >= 7) { updateP3Status(); getOff('cleared'); return; }
         res.className = 'result good';
         res.innerHTML = `✅ 对（${big ? '大' : '小'}）！继续下一张`;
-        setTimeout(() => { $('p3-result').textContent = ''; renderP3Question(); }, 650);
+      } else {
+        p3.owed += 1; // 猜错，记 1 口
+        res.className = 'result bad';
+        res.innerHTML = `❌ 错（实际 ${big ? '大' : '小'}）！记 <b>+1</b> 口，从第 1 张重来`;
+        toast('❌ 猜错，+1 口，回起点！', 'roast');
+        backToStart = true;
       }
+    }
+    if (backToStart) p3.pos = 0;
+    updateP3Status();
+
+    // 牌用完也可以下车
+    if (p3.deck.length < 1) { setTimeout(() => getOff('deckout'), 900); return; }
+    setTimeout(() => { $('p3-result').textContent = ''; renderBus(); renderP3Question(); }, backToStart ? 1000 : 650);
+  }
+
+  // 下车结算：cleared=七张全过；deckout=牌用完
+  function getOff(reason) {
+    const p3 = S.p3;
+    const loser = p3.losers[p3.li];
+    $('p3-choices').innerHTML = '';
+    updateP3Status();
+    const res = $('p3-result');
+    if (reason === 'cleared') {
+      res.className = 'result good';
+      res.innerHTML = p3.owed === 0
+        ? `🎉 <b>${S.names[loser]}</b> 七张全过、一口没喝，完美下车！`
+        : `🎉 <b>${S.names[loser]}</b> 七张全过，下车！本次共喝 <b>${p3.owed}</b> 口`;
     } else {
       res.className = 'result bad';
-      res.innerHTML = `❌ 错（实际 ${big ? '大' : '小'}）！<b>${S.names[loser]}</b> 喝 1 口，从第 1 张重来`;
-      toast('❌ 猜错，喝一口，回到起点！', 'roast');
-      p3.pos = 0;
-      setTimeout(() => { renderBus(); renderP3Question(); res.textContent = ''; }, 1000);
+      res.innerHTML = `🂠 牌用完了，<b>${S.names[loser]}</b> 下车！本次共喝 <b>${p3.owed}</b> 口`;
     }
+    toast(`${S.names[loser]} 下车，喝 ${p3.owed} 口`, p3.owed === 0 ? 'good' : 'pink');
+    $('p3-next').classList.remove('hidden');
+    $('p3-next').textContent = (p3.li + 1 < p3.losers.length) ? '下一位开Bus →' : '结束本局';
   }
 
   $('p3-next').addEventListener('click', () => {
