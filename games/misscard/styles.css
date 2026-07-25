@@ -161,9 +161,20 @@ body {
   display: flex; align-items: center; justify-content: space-between;
   background: var(--bg); color: var(--text);
   border: 1px solid #322c4d; border-radius: 12px;
-  padding: 14px 16px; font-size: 16px; font-family: inherit; cursor: pointer;
+  padding: 12px 14px; font-size: 16px; font-family: inherit; cursor: pointer;
+  width: 100%; text-align: left;
 }
+.si-label { font-weight: 600; }
+.si-actions { display: flex; gap: 8px; }
+.si-btn {
+  font-family: inherit; font-size: 14px; cursor: pointer;
+  border-radius: 8px; padding: 7px 12px;
+}
+.si-btn.use { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; }
+.si-btn.give { background: transparent; color: var(--accent2); border: 1px solid var(--accent2); }
 .sheet-item .use { color: var(--accent); font-size: 14px; }
+.sheet-item.to, .sheet-item.back { justify-content: space-between; }
+.sheet-item.back { color: var(--muted); }
 .sheet-empty { color: var(--muted); text-align: center; padding: 16px; }
 
 /* 特殊事件飘字 */

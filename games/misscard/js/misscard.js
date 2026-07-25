@@ -58,6 +58,13 @@
       '全场没一个被 %name% 的神经病带跑，演技拙劣，罚一口！',
       '%name% 的神经病还没发作完就被顶替了，喝口酒办个离职手续！',
     ],
+    toilet: [
+      '%name% 上厕所都不积极，那你别上了，作废，喝一口！',
+      '两张厕所牌都到 %name% 手里，膀胱是有多强？作废，罚一口！',
+      '%name%，一个人占俩坑位像话吗？两张作废，喝！',
+      '%name% 屯厕所牌当收藏呢？作废，罚酒一口清清库存！',
+      '厕所牌又双叒到 %name% 手里，系统都看不下去了——作废，喝！',
+    ],
   };
   function pickRoast(type, playerName) {
     const arr = ROASTS[type];
@@ -264,12 +271,14 @@
       case 8: {
         if (state.hands[drawer].includes('厕所')) {
           removeHand(drawer, '厕所');
-          return { title: '8 · 厕所牌', detail: [`🚽 <b>${who}</b> 手上已有厕所牌，两张 8 <b>作废</b>（都收走）。`] };
+          const r = pickRoast('toilet', who);
+          return { title: '8 · 厕所牌', toast: { text: r, cls: 'roast' },
+            detail: [`⚠️ ${r}`, `🚽 <b>${who}</b> 手上已有厕所牌，两张 8 <b>作废</b>（都收走）。`] };
         }
         addHand(drawer, '厕所');
         return { title: '8 · 厕所牌', detail: [
           `🚽 <b>${who}</b> 得到【厕所牌】，游戏中有此牌才能上厕所。`,
-          '<span class="dim">同一人两张 8 作废。</span>',
+          '<span class="dim">同一人两张 8 作废。点座位可用掉或转让给别人。</span>',
         ] };
       }
 
@@ -386,10 +395,16 @@
       handSheetList.innerHTML = '<div class="sheet-empty">暂无手牌</div>';
     } else {
       hand.forEach((label, k) => {
-        const row = document.createElement('button');
+        const row = document.createElement('div');
         row.className = 'sheet-item';
-        row.innerHTML = `<span>${HAND_EMOJI[label] || ''} ${label}</span><span class="use">用掉 ›</span>`;
-        row.addEventListener('click', () => useCard(idx, k));
+        const use = state.n > 1
+          ? `<button class="si-btn give">转让</button>`
+          : '';
+        row.innerHTML = `<span class="si-label">${HAND_EMOJI[label] || ''} ${label}</span>` +
+          `<span class="si-actions"><button class="si-btn use">用掉</button>${use}</span>`;
+        row.querySelector('.use').addEventListener('click', () => useCard(idx, k));
+        const giveBtn = row.querySelector('.give');
+        if (giveBtn) giveBtn.addEventListener('click', () => startTransfer(idx, k));
         handSheetList.appendChild(row);
       });
     }
@@ -404,7 +419,34 @@
     showToast((HAND_USE_MSG[label] || '%name% 用掉了一张牌').replaceAll('%name%', state.names[idx]),
       label === '挡酒' ? 'pink' : 'good');
     if (state.hands[idx].length === 0) handSheet.classList.add('hidden');
-    else openHandSheet(idx); // 刷新列表
+    else openHandSheet(idx);
+  }
+
+  // 转让：选一个接收人，把牌移过去
+  function startTransfer(idx, handPos) {
+    const label = state.hands[idx][handPos];
+    if (!label) return;
+    handSheetTitle.textContent = `把 ${HAND_EMOJI[label] || ''}${label} 转让给…`;
+    handSheetList.innerHTML = '';
+    state.names.forEach((nm, j) => {
+      if (j === idx) return;
+      const b = document.createElement('button');
+      b.className = 'sheet-item to';
+      b.innerHTML = `<span class="si-label">${escapeHtml(nm)}</span><span class="use">选 ›</span>`;
+      b.addEventListener('click', () => {
+        state.hands[idx].splice(handPos, 1);
+        state.hands[j].push(label);
+        renderTable();
+        showToast(`${state.names[idx]} 把 ${label} 转让给了 ${nm}`, 'pink');
+        handSheet.classList.add('hidden');
+      });
+      handSheetList.appendChild(b);
+    });
+    const back = document.createElement('button');
+    back.className = 'sheet-item back';
+    back.innerHTML = '<span class="si-label">‹ 返回</span>';
+    back.addEventListener('click', () => openHandSheet(idx));
+    handSheetList.appendChild(back);
   }
 
   handSheetClose.addEventListener('click', () => handSheet.classList.add('hidden'));
