@@ -177,6 +177,7 @@
     $('p2-info').textContent = '点「翻开下一张」开始';
     $('p2-matches').innerHTML = '';
     $('p2-flip').classList.remove('hidden');
+    $('p2-flip').textContent = '翻开下一张'; // 重置，避免残留上一局的「进入第三环节」
     renderPyramid(); renderP2Hands();
   }
 
@@ -286,17 +287,18 @@
 
   // ============ 第三环节 · 开Bus ============
   function startPhase3() {
-    // 找剩牌点数最大者（并列都上）
-    let max = 0;
-    S.names.forEach((nm, i) => S.hands[i].forEach((c) => { if (c.rank > max) max = c.rank; }));
+    // 找剩牌「总点数」最高者（只有总点数完全相同才并列都上）
+    const sums = S.hands.map((h) => h.reduce((s, c) => s + c.rank, 0));
+    let maxSum = 0;
+    S.names.forEach((nm, i) => { if (S.hands[i].length > 0 && sums[i] > maxSum) maxSum = sums[i]; });
     const losers = [];
-    S.names.forEach((nm, i) => { if (S.hands[i].some((c) => c.rank === max)) losers.push(i); });
+    S.names.forEach((nm, i) => { if (S.hands[i].length > 0 && sums[i] === maxSum) losers.push(i); });
 
-    if (max === 0 || losers.length === 0) { // 无人剩牌
+    if (maxSum === 0 || losers.length === 0) { // 无人剩牌
       $('over-info').innerHTML = '🎉 所有筹码都打光了，无人开 Bus，本局平安收场！';
       showScreen('over'); return;
     }
-    S.p3 = { losers, li: 0, deck: buildDeck(), slots: [], pos: 0, maxRank: max };
+    S.p3 = { losers, li: 0, deck: buildDeck(), slots: [], pos: 0, maxSum };
     showScreen('phase3');
     startRider();
   }
@@ -310,7 +312,7 @@
     p3.pos = 0;
     p3.owed = 0;                // 累计要喝多少口（不立刻喝）
     const loser = p3.losers[p3.li];
-    $('p3-who').innerHTML = `🚌 <b>${S.names[loser]}</b> 开 Bus（剩牌最大 ${rankLabel(p3.maxRank)}）`;
+    $('p3-who').innerHTML = `🚌 <b>${S.names[loser]}</b> 开 Bus（总点数最高 ${p3.maxSum} 点）`;
     $('p3-result').textContent = '';
     $('p3-next').classList.add('hidden');
     renderBus(); renderP3Question(); updateP3Status();
