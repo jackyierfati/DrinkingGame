@@ -275,17 +275,16 @@
       $('over-info').innerHTML = '🎉 所有筹码都打光了，无人开 Bus，本局平安收场！';
       showScreen('over'); return;
     }
-    S.p3 = { losers, li: 0, deck: buildDeck(), cards: [], revealed: [], pos: 0, maxRank: max };
+    S.p3 = { losers, li: 0, deck: buildDeck(), slots: [], pos: 0, maxRank: max };
     showScreen('phase3');
     startRider();
   }
 
+  // 每个位置一张牌：暗牌(null)参照 7，明牌参照它自己那张牌。
+  // 每次猜都重抽一张放到当前位置：猜对→替换并前进；猜错/相等→回第 1 张。
   function startRider() {
     const p3 = S.p3;
-    if (p3.deck.length < 7) p3.deck = buildDeck(); // 多个输家轮流开时补洗
-    p3.cards = [];
-    for (let k = 0; k < 7; k++) p3.cards.push(p3.deck.pop());
-    p3.revealed = new Array(7).fill(false);
+    p3.slots = new Array(7).fill(null); // null = 暗牌
     p3.pos = 0;
     const loser = p3.losers[p3.li];
     $('p3-who').innerHTML = `🚌 <b>${S.names[loser]}</b> 开 Bus（剩牌最大 ${rankLabel(p3.maxRank)}）`;
@@ -296,9 +295,9 @@
 
   function renderBus() {
     const row = $('p3-row'); row.innerHTML = '';
-    S.p3.cards.forEach((c, k) => {
-      const el = cardEl(c, !S.p3.revealed[k]);
-      if (k === S.p3.pos && !S.p3.revealed[k]) el.classList.add('active');
+    S.p3.slots.forEach((c, k) => {
+      const el = c ? cardEl(c, false) : cardEl(null, true);
+      if (k === S.p3.pos) el.classList.add('active');
       row.appendChild(el);
     });
   }
@@ -306,19 +305,22 @@
   function renderP3Question() {
     const p3 = S.p3;
     $('p3-choices').innerHTML = '';
-    const ref = p3.pos === 0 ? 7 : p3.cards[p3.pos - 1].rank;
-    $('p3-question').innerHTML = `第 ${p3.pos + 1}/7 张：比 <b>${p3.pos === 0 ? '7' : rankLabel(ref)}</b> 大还是小？`;
+    const slot = p3.slots[p3.pos];
+    const refLabel = slot ? rankLabel(slot.rank) : '7';
+    $('p3-question').innerHTML = `第 ${p3.pos + 1}/7 张：比 <b>${refLabel}</b> 大还是小？`;
     [['大', 'big'], ['小', 'small']].forEach(([label, val]) => {
       const b = document.createElement('button'); b.className = 'choice'; b.textContent = label;
-      b.addEventListener('click', () => guessP3(val, ref));
+      b.addEventListener('click', () => guessP3(val));
       $('p3-choices').appendChild(b);
     });
   }
 
-  function guessP3(choice, ref) {
+  function guessP3(choice) {
     const p3 = S.p3;
-    const card = p3.cards[p3.pos];
-    p3.revealed[p3.pos] = true;
+    const ref = p3.slots[p3.pos] ? p3.slots[p3.pos].rank : 7;
+    if (p3.deck.length < 1) p3.deck = buildDeck();
+    const card = p3.deck.pop();
+    p3.slots[p3.pos] = card; // 抽到的牌放到当前位置（明牌）
     renderBus();
     const loser = p3.losers[p3.li];
     const res = $('p3-result');
@@ -326,38 +328,32 @@
 
     if (card.rank === ref) {
       res.className = 'result gold';
-      res.innerHTML = `🎯 不大不小！<b>${S.names[loser]}</b> 喝双倍（2 口），这张过～`;
+      res.innerHTML = `🎯 不大不小（都是 ${rankLabel(ref)}）！<b>${S.names[loser]}</b> 喝双倍，回第 1 张`;
       toast('🎯 不大不小，喝双倍！', 'gold');
-      p3.pos++;
-      afterP3Step();
-    } else {
-      const big = card.rank > ref;
-      const right = choice === (big ? 'big' : 'small');
-      if (right) {
-        res.className = 'result good';
-        res.innerHTML = `✅ 对（${big ? '大' : '小'}）！继续`;
-        p3.pos++;
-        afterP3Step();
-      } else {
-        res.className = 'result bad';
-        res.innerHTML = `❌ 错（实际 ${big ? '大' : '小'}）！<b>${S.names[loser]}</b> 喝 1 口，从第 1 张重来`;
-        toast('❌ 猜错，喝一口，回到起点！', 'roast');
-        // 牌留明，回到第 1 张（已翻开的保持翻开）
-        p3.pos = 0;
-        setTimeout(() => { renderBus(); renderP3Question(); res.textContent = ''; }, 900);
-      }
+      p3.pos = 0;
+      setTimeout(() => { renderBus(); renderP3Question(); res.textContent = ''; }, 1000);
+      return;
     }
-  }
-
-  function afterP3Step() {
-    const p3 = S.p3;
-    if (p3.pos >= 7) {
-      const loser = p3.losers[p3.li];
-      $('p3-result').innerHTML = `🎉 <b>${S.names[loser]}</b> 成功通关，下车！`;
-      $('p3-next').classList.remove('hidden');
-      $('p3-next').textContent = (p3.li + 1 < p3.losers.length) ? '下一位开Bus →' : '结束本局';
+    const big = card.rank > ref;
+    const right = choice === (big ? 'big' : 'small');
+    if (right) {
+      p3.pos++;
+      if (p3.pos >= 7) {
+        res.className = 'result good';
+        res.innerHTML = `🎉 <b>${S.names[loser]}</b> 七张全过，成功下车！`;
+        $('p3-next').classList.remove('hidden');
+        $('p3-next').textContent = (p3.li + 1 < p3.losers.length) ? '下一位开Bus →' : '结束本局';
+      } else {
+        res.className = 'result good';
+        res.innerHTML = `✅ 对（${big ? '大' : '小'}）！继续下一张`;
+        setTimeout(() => { $('p3-result').textContent = ''; renderP3Question(); }, 650);
+      }
     } else {
-      setTimeout(() => { $('p3-result').textContent = ''; renderP3Question(); }, 700);
+      res.className = 'result bad';
+      res.innerHTML = `❌ 错（实际 ${big ? '大' : '小'}）！<b>${S.names[loser]}</b> 喝 1 口，从第 1 张重来`;
+      toast('❌ 猜错，喝一口，回到起点！', 'roast');
+      p3.pos = 0;
+      setTimeout(() => { renderBus(); renderP3Question(); res.textContent = ''; }, 1000);
     }
   }
 
